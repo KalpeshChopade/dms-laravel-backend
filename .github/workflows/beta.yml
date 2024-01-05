@@ -1,0 +1,21 @@
+on:
+  pull_request:
+    branches:
+      - beta
+    types:
+      [closed]
+name: 🚀 Deploy Website to Beta on pull request
+jobs:
+  web-deploy:
+    name: 🎉 Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v2
+      - name: 📂 Sync files
+        uses: SamKirkland/FTP-Deploy-Action@4.3.2
+        with:
+          server:  ftp.greenindiaretail.in
+          username: ${{ secrets.BETA_USERNAME }}
+          password: ${{ secrets.BETA_PASSWORD }}
+          state-name: ./laravel-sync-state.json
