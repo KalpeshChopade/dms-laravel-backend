@@ -61,6 +61,15 @@ class UserController extends Controller
                 $file->move(public_path("users/profile_images"), $profile_image);
             }
 
+            return response()->json([
+                "status" => "success",
+                "status_code" => 200,
+                "data" => [
+                    "isFile" => $request->hasFile("profile_image"),
+                    "profile_image" => $profile_image
+                ]
+            ]);
+
 
             $user = new User();
             $user->name = $request->input("name");
