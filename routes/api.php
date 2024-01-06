@@ -68,4 +68,10 @@ Route::prefix("/v1")->group(function () {
 
     /** Route to get my hierarchy */
     Route::get("/get-my-hierarchy", [UserController::class, "getMyHierarchy"]);
+
+    /** Route to get users list */
+    Route::get("/get-users-list", [UserController::class, "getUsersList"]);
+
+    /** Route to verify users */
+    Route::get("/verify-users", [UserController::class, "verifyUsers"]);
 });

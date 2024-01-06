@@ -61,14 +61,14 @@ class UserController extends Controller
                 $file->move(public_path("users/profile_images"), $profile_image);
             }
 
-            return response()->json([
-                "status" => "success",
-                "status_code" => 200,
-                "data" => [
-                    "isFile" => $request->hasFile("profile_image"),
-                    "profile_image" => $profile_image
-                ]
-            ]);
+            // return response()->json([
+            //     "status" => "success",
+            //     "status_code" => 200,
+            //     "data" => [
+            //         "isFile" => $request->hasFile("profile_image"),
+            //         "profile_image" => $profile_image
+            //     ]
+            // ]);
 
 
             $user = new User();
@@ -268,13 +268,50 @@ class UserController extends Controller
             }
 
 
-            $my_hierarchy = self::fetchLead($request->input("user_id"), []);
+            // $my_hierarchy = self::fetchLead($request->input("user_id"), []);
 
+            $self = User::where("id", $request->input("user_id"))->first();
+
+            $registration = Registration::where("user_id", $request->input("user_id"))->where("isActive", 1)->where("isVerified", 1)->first();
+
+            if (!$registration) {
+                return response()->json([
+                    "status" => "failure",
+                    "status_code" => 400,
+                    "message" => "User not registered"
+                ]);
+            }
+
+            $parent_blue_user_id = $registration->blue_user_id;
+            $parent_gold_user_id = $registration->gold_user_id;
+            $parent_saffron_user_id = $registration->saffron_user_id;
+
+            $parent["blue"] = User::where("id", $parent_blue_user_id)->first();
+            $parent["gold"] = Agent::where("id", $parent_gold_user_id)->first();
+            $parent["saffron"] = Agent::where("id", $parent_saffron_user_id)->first();
+
+            $registration = Registration::where("blue_user_id", $request->input("user_id"))->where("isActive", 1)->where("isVerified", 1)->get();
+
+            $count = 0;
+            $children = [];
+            foreach ($registration as $key => $value) {
+                $user = User::where("id", $value->user_id)->first();
+                $gold_agent = Agent::where("id", $value->gold_user_id)->first();
+                $saffron_agent = Agent::where("id", $value->saffron_user_id)->first();
+                $arr["user"] = $user;
+                $arr["gold_agent"] = $gold_agent;
+                $arr["saffron_agent"] = $saffron_agent;
+                $children[] = $arr;
+            }
 
             return response()->json([
                 "status" => "success",
                 "status_code" => 200,
-                "data" => $my_hierarchy,
+                "data" => [
+                    "self" => $self,
+                    "parent" => $parent,
+                    "children" => $children
+                ],
                 "message" => "My Hierarchy fetched successfully"
             ]);
         } catch (Exception $e) {
@@ -302,9 +339,80 @@ class UserController extends Controller
             }
 
             return $arr;
-
         } catch (Exception $e) {
             return $e->getMessage();
+        }
+    }
+
+    /** Function to getUsersList */
+    public function getUsersList()
+    {
+        try {
+            $users = User::join("registrations", "registrations.user_id", "=", "users.id")->get();
+
+            foreach ($users as $key => $value) {
+                $value->blue_agent = User::where("id", $value->blue_user_id)->first();
+                $value->gold_agent = Agent::where("id", $value->gold_user_id)->first();
+                $value->saffron_agent = Agent::where("id", $value->saffron_user_id)->first();
+            }
+
+            return response()->json([
+                "status" => "success",
+                "status_code" => 200,
+                "data" => $users,
+                "message" => "Users list fetched successfully"
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                "status" => "error",
+                "status_code" => 500,
+                "message" => $e->getMessage()
+            ]);
+        }
+    }
+
+    /** Function to verifyUsers */
+    public function verifyUsers(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                "user_id" => "required",
+                "isVerified" => "required",
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => "failure",
+                    "status_code" => 400,
+                    "data" => $validator->errors(),
+                    "message" => "Bad Request"
+                ]);
+            }
+
+            $registration = Registration::where("user_id", $request->input("user_id"))->first();
+            if (!$registration) {
+                return response()->json([
+                    "status" => "failure",
+                    "status_code" => 400,
+                    "message" => "User not registered"
+                ]);
+            }
+
+            $registration->isVerified = $request->input("isVerified");
+            $registration->save();
+
+            return response()->json([
+                "status" => "success",
+                "status_code" => 200,
+                "data" => $registration,
+                "message" => "User verification status updated successfully"
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                "status" => "error",
+                "status_code" => 500,
+                "message" => $e->getMessage()
+            ]);
         }
     }
 }

@@ -138,11 +138,15 @@ class IncomeController extends Controller
             }
 
             if ($income1->income1 > 0) {
+
+                $income1->income1 = $income1->investment * $income1->profit_percentage / 100;
+                $income1->save();
+
                 return response()->json([
-                    "status" => "failure",
-                    "status_code" => 400,
+                    "status" => "success",
+                    "status_code" => 200,
                     "data" => $income1,
-                    "message" => "Income1 already calculated"
+                    "message" => "Income1 calculated successfully"
                 ]);
             }
 
