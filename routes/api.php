@@ -74,4 +74,7 @@ Route::prefix("/v1")->group(function () {
 
     /** Route to verify users */
     Route::get("/verify-users", [UserController::class, "verifyUsers"]);
+
+    /** Route to add bkb id */
+    Route::get("/add-bkb-id", [UserController::class, "addBkbId"]);
 });

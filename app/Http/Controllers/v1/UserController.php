@@ -415,4 +415,49 @@ class UserController extends Controller
             ]);
         }
     }
+
+    /** Function to addBkbId */
+    public function addBkbId(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                "user_id" => "required",
+                "bkb_id" => "required",
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => "failure",
+                    "status_code" => 400,
+                    "data" => $validator->errors(),
+                    "message" => "Bad Request"
+                ]);
+            }
+
+            $user = User::where("id", $request->input("user_id"))->first();
+            if (!$user) {
+                return response()->json([
+                    "status" => "failure",
+                    "status_code" => 400,
+                    "message" => "User not found"
+                ]);
+            }
+
+            $user->bkb_id = $request->input("bkb_id");
+            $user->save();
+
+            return response()->json([
+                "status" => "success",
+                "status_code" => 200,
+                "data" => $user,
+                "message" => "BKB Id added successfully"
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                "status" => "error",
+                "status_code" => 500,
+                "message" => $e->getMessage()
+            ]);
+        }
+    }
 }
