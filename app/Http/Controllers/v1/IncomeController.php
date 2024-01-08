@@ -7,6 +7,7 @@ use App\Models\Income1;
 use App\Models\Income2;
 use App\Models\Income3;
 use App\Models\Income4;
+use App\Models\Income5;
 use App\Models\Registration;
 use App\Models\User;
 use Exception;
@@ -564,14 +565,108 @@ class IncomeController extends Controller
                 $this->calculateIncome2($request);
                 $this->calculateIncome3($request);
                 $this->calculateIncome4($request);
+                $this->calculateIncome5($request);
                 // echo $res;
             }
 
             return response()->json([
                 "status" => "success",
                 "status_code" => 200,
-                "message" => "Income1 calculated for all users successfully"
+                "message" => "Incomes calculated for all users successfully"
             ]);
+        } catch (Exception $e) {
+            return response()->json([
+                "status" => "error",
+                "status_code" => 500,
+                "message" => $e->getMessage()
+            ]);
+        }
+    }
+
+    /** Function to calculateIncome5 */
+    public function calculateIncome5(Request $request)
+    {
+        try {
+
+            $validator = Validator::make($request->all(), [
+                "user_id" => "required"
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => "failure",
+                    "status_code" => 400,
+                    "data" => $validator->errors(),
+                    "message" => "Bad Request"
+                ]);
+            }
+
+            $income5 = Income5::where("user_id", $request->input("user_id"))->first();
+
+            $income = 0;
+            if (!$income5) {
+                $income5 = new Income5();
+            } else {
+                $income = $income5->income5;
+            }
+            if ($income == 0) {
+                $total_income1 = Income1::where("user_id", $request->input("user_id"))->sum("income1");
+                $total_user = User::where("isDeleted", 0)->count();
+                $user_stayed = rand(1, $total_user);
+                $income = $total_income1 / $user_stayed;
+            }
+            $income5->user_id = $request->input("user_id");
+            $income5->income5 = $income;
+            $income5->save();
+
+            return response()->json([
+                "status" => "success",
+                "status_code" => 200,
+                "data" => $income5,
+                "message" => "Income5 calculated successfully"
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                "status" => "error",
+                "status_code" => 500,
+                "message" => $e->getMessage()
+            ]);
+        }
+    }
+
+    /** Function to getIncome5 */
+    public function getIncome5(Request $request){
+        try {
+
+            $validator = Validator::make($request->all(), [
+                "user_id" => "required"
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => "failure",
+                    "status_code" => 400,
+                    "data" => $validator->errors(),
+                    "message" => "Bad Request"
+                ]);
+            }
+
+            $income5 = Income5::where("user_id", $request->input("user_id"))->first();
+
+            if (!$income5) {
+                return response()->json([
+                    "status" => "failure",
+                    "status_code" => 400,
+                    "message" => "Income5 not found"
+                ]);
+            } else {
+                return response()->json([
+                    "status" => "success",
+                    "status_code" => 200,
+                    "data" => $income5,
+                    "message" => "Income5 fetched successfully"
+                ]);
+            }
         } catch (Exception $e) {
             return response()->json([
                 "status" => "error",

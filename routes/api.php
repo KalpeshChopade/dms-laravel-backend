@@ -63,6 +63,12 @@ Route::prefix("/v1")->group(function () {
     /** Route to get income4 */
     Route::get("/get-income4", [IncomeController::class, "getIncome4"]);
 
+    /** Route to calculate income5 */
+    Route::get("/calculate-income5", [IncomeController::class, "calculateIncome5"]);
+
+    /** Route to get income5 */
+    Route::get("/get-income5", [IncomeController::class, "getIncome5"]);
+
     /** Route to createMasterBlueUser */
     Route::get("/create-master-blue-user", [AdminController::class, "createMasterBlueUser"]);
 
