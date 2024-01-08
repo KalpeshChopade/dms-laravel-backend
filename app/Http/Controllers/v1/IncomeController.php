@@ -16,6 +16,12 @@ use Illuminate\Support\Facades\Validator;
 
 class IncomeController extends Controller
 {
+    // Global array to store user_ids
+    private $userIds = [];
+
+    // Global array to store user_ids level-wise
+    private $userIdsByLevel = [];
+
     /** Function to addInvestment */
     public function addInvestment(Request $request)
     {
@@ -480,13 +486,29 @@ class IncomeController extends Controller
                 }
             }
 
+            // Iterate over leads and fetch user_ids recursively
+            $this->fetchUserIdsRecursive($my_leads);
+
+            // Access the global array
+            $userIds = $this->userIds;
+
+            $myincome = 0;
+
+            // Calculate income1 for each user
+            foreach ($userIds as $userId) {
+                $income1 = Income1::where("user_id", $userId)->first();
+                if ($income1) {
+                    $myincome += $income1->income1 * 2 / 100;
+                }
+            }
+
             $income4 = Income4::where("user_id", $request->input("user_id"))->first();
 
             if (!$income4)
                 $income4 = new Income4();
 
             $income4->user_id = $request->input("user_id");
-            $income4->income4 = $income4_lead_1_income + $income4_lead_2_income + $income4_lead_3_income;
+            $income4->income4 = $myincome;
             $income4->lead_1_id = $income4_lead_1_id;
             $income4->lead_2_id = $income4_lead_2_id;
             $income4->lead_3_id = $income4_lead_3_id;
@@ -635,7 +657,8 @@ class IncomeController extends Controller
     }
 
     /** Function to getIncome5 */
-    public function getIncome5(Request $request){
+    public function getIncome5(Request $request)
+    {
         try {
 
             $validator = Validator::make($request->all(), [
@@ -673,6 +696,111 @@ class IncomeController extends Controller
                 "status_code" => 500,
                 "message" => $e->getMessage()
             ]);
+        }
+    }
+
+    /** Function to calculateIncome4V2 */
+    public function calculateIncome4V2(Request $request)
+    {
+        try {
+
+            $validator = Validator::make($request->all(), [
+                "user_id" => "required"
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => "failure",
+                    "status_code" => 400,
+                    "data" => $validator->errors(),
+                    "message" => "Bad Request"
+                ]);
+            }
+
+            // Fetch leads
+            $myLeads = Registration::where("blue_user_id", $request->input("user_id"))
+                ->where("isActive", 1)
+                ->where("isVerified", 1)
+                ->get();
+
+            // Iterate over leads and fetch user_ids recursively
+            $this->fetchUserIdsRecursive($myLeads);
+
+            // Access the global array
+            $userIds = $this->userIds;
+
+            // Iterate over leads and fetch user_ids level-wise recursively
+            $this->fetchUserIdsRecursiveLevel($myLeads, 0); // Start with level 0
+
+            // Access the global array
+            $userIdsByLevel = $this->userIdsByLevel;
+
+            $myincome = 0;
+
+            // Calculate income1 for each user
+            foreach ($userIds as $userId) {
+                $income1 = Income1::where("user_id", $userId)->first();
+                if ($income1) {
+                    $myincome += $income1->income1 * 2 / 100;
+                }
+            }
+
+            return response()->json([
+                "status" => "success",
+                "status_code" => 200,
+                "data" => $userIds,
+                "message" => "Income4 calculated successfully"
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                "status" => "error",
+                "status_code" => 500,
+                "message" => $e->getMessage()
+            ]);
+        }
+    }
+
+    private function fetchUserIdsRecursive($leads)
+    {
+        foreach ($leads as $lead) {
+            // Add user_id to the global array
+            $this->userIds[] = $lead->user_id;
+
+            // Fetch child leads recursively
+            $childLeads = Registration::where("blue_user_id", $lead->user_id)
+                ->where("isActive", 1)
+                ->where("isVerified", 1)
+                ->get();
+
+            // Recursively call the function for child leads
+            $this->fetchUserIdsRecursive($childLeads);
+        }
+    }
+
+    private function fetchUserIdsRecursiveLevel($leads, $level)
+    {
+        foreach ($leads as $lead) {
+            // Add user_id to the global array with level information
+            $user = [
+                'user_id' => $lead->user_id,
+                'children' => [], // Initialize an array for child leads
+            ];
+
+            // Fetch child leads up to a maximum of 3
+            $childLeads = Registration::where("blue_user_id", $lead->user_id)
+                ->where("isActive", 1)
+                ->where("isVerified", 1)
+                ->limit(3)
+                ->get();
+
+            // Recursively call the function for child leads with increased level
+            $this->fetchUserIdsRecursiveLevel($childLeads, $level + 1);
+
+            // Add children to the current user
+            $user['children'] = $this->userIdsByLevel[$level + 1] ?? [];
+
+            // Add the user to the global array
+            $this->userIdsByLevel[$level][] = $user;
         }
     }
 }
