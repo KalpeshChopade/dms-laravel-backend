@@ -127,13 +127,25 @@ class IncomeController extends Controller
                 ]);
             }
 
-            $income1 = Income1::where("user_id", $request->input("user_id"))->first();
+            $income1 = Income1::where("user_id", $request->input("user_id"))->where("isDeleted", 0)->first();
 
             if (!$income1) {
+                $income1 = new Income1();
+                $income1->user_id = $request->input("user_id");
+                // Generate Random Percentage between 1 to 15
+                $profit_percentage = rand(3, 5);
+                $investment = rand(100000, 500000);
+
+                $income1->investment = $investment;
+                $income1->profit_percentage = $profit_percentage;
+                $income1->income1 = $investment * $profit_percentage / 100;
+                $income1->save();
+
                 return response()->json([
-                    "status" => "failure",
-                    "status_code" => 400,
-                    "message" => "Investment not found"
+                    "status" => "success",
+                    "status_code" => 200,
+                    "data" => $income1,
+                    "message" => "Income1 calculated successfully"
                 ]);
             }
 
@@ -151,10 +163,15 @@ class IncomeController extends Controller
             }
 
             // Generate Random Percentage between 1 to 15
-            $profit_percentage = rand(1, 15);
+            $profit_percentage = rand(3, 5);
+            if ($income1->investment == 0)
+                $investment = rand(100000, 500000);
+            else
+                $investment = $income1->investment;
 
+            $income1->investment = $investment;
             $income1->profit_percentage = $profit_percentage;
-            $income1->income1 = $income1->investment * $profit_percentage / 100;
+            $income1->income1 = $investment * $profit_percentage / 100;
             $income1->save();
 
             return response()->json([
@@ -221,8 +238,8 @@ class IncomeController extends Controller
                 $blue_income1->save();
             }
 
-            $saffron_income = $income1->income1 * 2 / 100;
-            $gold_income = $income1->income1 * 4 / 100;
+            $saffron_income = $income1->income1 * 4 / 100;
+            $gold_income = $income1->income1 * 2 / 100;
 
             $income2 = Income2::where("user_id", $request->input("user_id"))->first();
 
@@ -450,13 +467,13 @@ class IncomeController extends Controller
                 $income1 = Income1::where("user_id", $lead->user_id)->first();
                 if ($income1) {
                     if ($i == 1) {
-                        $income4_lead_1_income = $income1->income1 * 10 / 100;
+                        $income4_lead_1_income = $income1->income1 * 2 / 100;
                         $income4_lead_1_id = $lead->user_id;
                     } else if ($i == 2) {
-                        $income4_lead_2_income = $income1->income1 * 10 / 100;
+                        $income4_lead_2_income = $income1->income1 * 2 / 100;
                         $income4_lead_2_id = $lead->user_id;
                     } else if ($i == 3) {
-                        $income4_lead_3_income = $income1->income1 * 10 / 100;
+                        $income4_lead_3_income = $income1->income1 * 2 / 100;
                         $income4_lead_3_id = $lead->user_id;
                     }
                 }
@@ -526,6 +543,35 @@ class IncomeController extends Controller
                     "message" => "Income4 fetched successfully"
                 ]);
             }
+        } catch (Exception $e) {
+            return response()->json([
+                "status" => "error",
+                "status_code" => 500,
+                "message" => $e->getMessage()
+            ]);
+        }
+    }
+
+    /** Function to calculateIncomeForAllUser */
+    public function calculateIncomeForAllUser()
+    {
+        try {
+
+            $users = User::all();
+            foreach ($users as $user) {
+                $request = new Request(['user_id' => $user->id]);
+                $this->calculateIncome1($request);
+                $this->calculateIncome2($request);
+                $this->calculateIncome3($request);
+                $this->calculateIncome4($request);
+                // echo $res;
+            }
+
+            return response()->json([
+                "status" => "success",
+                "status_code" => 200,
+                "message" => "Income1 calculated for all users successfully"
+            ]);
         } catch (Exception $e) {
             return response()->json([
                 "status" => "error",

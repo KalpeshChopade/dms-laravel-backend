@@ -77,4 +77,7 @@ Route::prefix("/v1")->group(function () {
 
     /** Route to add bkb id */
     Route::get("/add-bkb-id", [UserController::class, "addBkbId"]);
+
+    /** Route to calculateIncomeForAllUser */
+    Route::get("/calculate-income-for-all-user", [IncomeController::class, "calculateIncomeForAllUser"]);
 });
