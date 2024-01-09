@@ -9,6 +9,7 @@ use App\Models\Registration;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -482,5 +483,71 @@ class UserController extends Controller
                 "message" => $e->getMessage()
             ]);
         }
+    }
+
+    /** Function to getMyHierarchyNew */
+    public function getMyHierarchyNew(Request $request)
+    {
+        $user_id = $request->input("user_id");
+
+        $hierarchy = $this->getHierarchy($user_id,0);
+
+        $registration = Registration::where("user_id", $user_id)->where("isDeleted",0)->first();
+        // $blue_user = User::select('id','name')->where("id", $registration->blue_user_id)->first();
+        // $gold_agent = Agent::select('id','name')->where("id", $registration->gold_user_id)->first();
+        // $saffron_agent = Agent::select('id','name')->where("id", $registration->saffron_user_id)->first();
+        $blue_user = [];
+        $gold_agent = [];
+        $saffron_agent = [];
+
+        $data = [
+            'user_id' => $user_id,
+            'level' => 0,
+            'self' => $registration,
+            'parent' => [
+                'blue_user' => $blue_user,
+                'gold_agent' => $gold_agent,
+                'saffron_agent' => $saffron_agent
+            ],
+            'children' => $hierarchy
+        ];
+
+        return response()->json([
+            "status" => "success",
+            "status_code" => 200,
+            "data" => $data,
+            "message" => "My Hierarchy fetched successfully"
+        ]);
+    }
+
+    private function getHierarchy($user_id, $level)
+    {
+        $leads = DB::table('registrations')
+            ->select('id','user_id', 'blue_user_id', 'gold_user_id', 'saffron_user_id')
+            ->where('blue_user_id', $user_id)
+            ->where('isActive', 1)
+            ->get();
+
+        $hierarchy = [];
+
+        foreach ($leads as $lead) {
+            $subHierarchy = $this->getHierarchy($lead->user_id, $level + 1);
+            $blue_user = User::select('id','name')->where("id", $lead->blue_user_id)->first();
+            $gold_agent = Agent::select('id','name')->where("id", $lead->gold_user_id)->first();
+            $saffron_agent = Agent::select('id','name')->where("id", $lead->saffron_user_id)->first();
+            $hierarchy[] = [
+                'user_id' => $lead->user_id,
+                'level' => $level,
+                // 'self' => $lead,
+                // 'parent' => [
+                //     'blue_user' => $blue_user,
+                //     'gold_agent' => $gold_agent,
+                //     'saffron_agent' => $saffron_agent
+                // ],
+                'children' => $subHierarchy
+            ];
+        }
+
+        return $hierarchy;
     }
 }

@@ -73,7 +73,7 @@ Route::prefix("/v1")->group(function () {
     Route::get("/create-master-blue-user", [AdminController::class, "createMasterBlueUser"]);
 
     /** Route to get my hierarchy */
-    Route::get("/get-my-hierarchy", [UserController::class, "getMyHierarchy"]);
+    Route::get("/get-my-hierarchy", [UserController::class, "getMyHierarchyNew"]);
 
     /** Route to get users list */
     Route::get("/get-users-list", [UserController::class, "getUsersList"]);
