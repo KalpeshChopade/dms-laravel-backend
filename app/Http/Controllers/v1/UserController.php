@@ -20,8 +20,7 @@ class UserController extends Controller
         try {
 
             $validator = Validator::make($request->all(), [
-                "name" => "required",
-                "link" => "required"
+                "bkb_id" => "required",
             ]);
 
             if ($validator->fails()) {
@@ -30,6 +29,24 @@ class UserController extends Controller
                     "status_code" => 400,
                     "data" => $validator->errors(),
                     "message" => "Bad Request"
+                ]);
+            }
+
+            $check_bkb_user = User::where("bkb_id", $request->input("bkb_id"))->first();
+            if ($check_bkb_user) {
+                return response()->json([
+                    "status" => "success",
+                    "status_code" => 200,
+                    "data" => $check_bkb_user,
+                    "message" => "Login Successfull",
+                ]);
+            }
+
+            if (!$request->has("link")) {
+                return response()->json([
+                    "status" => "failure",
+                    "status_code" => 400,
+                    "message" => "Link is required"
                 ]);
             }
 
@@ -100,6 +117,12 @@ class UserController extends Controller
                 $saffron_agent->save();
             }
 
+            // Generate Random Percentage between 1 to 15
+            $profit_percentage = rand(1, 15);
+            $investment = rand(100000, 500000);
+
+            $profit_percentage = $profit_percentage;
+            $income1 = $investment * $profit_percentage / 100;
 
             $income1 = new Income1();
             $income1->user_id = $user->id;
