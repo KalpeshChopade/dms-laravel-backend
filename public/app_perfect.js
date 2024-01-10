@@ -23,32 +23,19 @@ function treeToHtml(tree) {
         }
 
         toString() {
-            return `(${this.width})${this.user?.user_id !== 0 ? this.user?.user_id : '+'}`;
+            return `(${this.width})${this.user?.user_id ?? ""}`
         }
 
         toHtml() {
             if (!this.children) return ""; // This node represents right side padding
             const left = this.hasLeftSibling ? 'class="branch"' : '';
             const right = this.hasRightSibling ? 'class="branch"' : '';
-
-            let html = '';
-            if (this.user?.user_id !== 0) {
-                html = `${this.width > 0 ? `<td colspan="${this.width}" ${left}></td>` : ""}
-                <td><table>
-                    ${this.isRoot ? "" : `<tr><td ${left}></td><td ${right}></td></tr>`}
-                    <tr><td colspan="2">${this.user?.user_id}</td></tr>
-                    ${this.children.length ? "<tr><td></td><td></td></tr>" : ""}
-                </table></td>`;
-            } else {
-                html = `${this.width > 0 ? `<td colspan="${this.width}" ${left}></td>` : ""}
-                <td onclick="alert('${this.user.parent.blue_user.id}')" style="cursor: pointer;"><table>
-                    ${this.isRoot ? "" : `<tr><td ${left}></td><td ${right}></td></tr>`}
-                    <tr><td colspan="2">+</td></tr>
-                    ${this.children.length ? "<tr><td></td><td></td></tr>" : ""}
-                </table></td>`;
-            }
-
-            return html;
+            return `${this.width > 0 ? `<td colspan="${this.width}" ${left}></td>` : ""}
+            <td><table>
+                ${this.isRoot ? "" : `<tr><td ${left}></td><td ${right}></td></tr>`}
+                <tr><td colspan="2">${this.user?.user_id}</td></tr>
+                ${this.children.length ? "<tr><td></td><td></td></tr>" : ""}
+            </table></td>`;
         }
     }
 
@@ -57,7 +44,7 @@ function treeToHtml(tree) {
             arrays.map(array => array[i])
         );
 
-    const getWidth = levels => levels[0].reduce((sum, { width, user }) => sum + width + (user?.user_id !== 0), 0);
+    const getWidth = levels => levels[0].reduce((sum, { width, user }) => sum + width + (user?.user_id != null), 0);
 
     function mergePair(rowsA, rowsB) {
         const pair = [rowsA, rowsB];
@@ -92,26 +79,22 @@ function treeToHtml(tree) {
     ).join("\n");
 }
 
-// ... (Remaining code)
-
 // ---------------- Example run -----------------
-async function demo(user_id) {
+async function demo() {
 
     // Api Call here using jquery
 
-    document.querySelector(".graph").innerHTML = "";
-
     var settings = {
-        "url": "/api/v1/get-my-hierarchy?user_id=" + user_id,
+        "url": "http://127.0.0.1:8000/api/v1/get-my-hierarchy?user_id=1",
         "method": "GET",
         "timeout": 0,
-    };
+      };
 
-    $.ajax(settings).done(function (response) {
+      $.ajax(settings).done(function (response) {
         console.log(response);
         const root = createTree(response.data);
         document.querySelector(".graph").innerHTML = treeToHtml(root);
-    });
+      });
 }
 
 function createTree(data) {
@@ -119,4 +102,4 @@ function createTree(data) {
     return buildTree(data);
 }
 
-demo(1);
+demo();

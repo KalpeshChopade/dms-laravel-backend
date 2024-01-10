@@ -490,9 +490,9 @@ class UserController extends Controller
     {
         $user_id = $request->input("user_id");
 
-        $hierarchy = $this->getHierarchy($user_id,0);
+        $hierarchy = $this->getHierarchy($user_id, 0, 0);
 
-        $registration = Registration::where("user_id", $user_id)->where("isDeleted",0)->first();
+        $registration = Registration::where("user_id", $user_id)->where("isDeleted", 0)->first();
         // $blue_user = User::select('id','name')->where("id", $registration->blue_user_id)->first();
         // $gold_agent = Agent::select('id','name')->where("id", $registration->gold_user_id)->first();
         // $saffron_agent = Agent::select('id','name')->where("id", $registration->saffron_user_id)->first();
@@ -520,10 +520,10 @@ class UserController extends Controller
         ]);
     }
 
-    private function getHierarchy($user_id, $level)
+    private function getHierarchyPerfect($user_id, $level)
     {
         $leads = DB::table('registrations')
-            ->select('id','user_id', 'blue_user_id', 'gold_user_id', 'saffron_user_id')
+            ->select('id', 'user_id', 'blue_user_id', 'gold_user_id', 'saffron_user_id')
             ->where('blue_user_id', $user_id)
             ->where('isActive', 1)
             ->get();
@@ -532,18 +532,115 @@ class UserController extends Controller
 
         foreach ($leads as $lead) {
             $subHierarchy = $this->getHierarchy($lead->user_id, $level + 1);
-            $blue_user = User::select('id','name')->where("id", $lead->blue_user_id)->first();
-            $gold_agent = Agent::select('id','name')->where("id", $lead->gold_user_id)->first();
-            $saffron_agent = Agent::select('id','name')->where("id", $lead->saffron_user_id)->first();
+            $blue_user = User::select('id', 'name')->where("id", $lead->blue_user_id)->first();
+            $gold_agent = Agent::select('id', 'name')->where("id", $lead->gold_user_id)->first();
+            $saffron_agent = Agent::select('id', 'name')->where("id", $lead->saffron_user_id)->first();
             $hierarchy[] = [
                 'user_id' => $lead->user_id,
                 'level' => $level,
                 // 'self' => $lead,
-                // 'parent' => [
-                //     'blue_user' => $blue_user,
-                //     'gold_agent' => $gold_agent,
-                //     'saffron_agent' => $saffron_agent
-                // ],
+                'parent' => [
+                    'blue_user' => $blue_user,
+                    'gold_agent' => $gold_agent,
+                    'saffron_agent' => $saffron_agent
+                ],
+                'children' => $subHierarchy
+            ];
+        }
+
+        return $hierarchy;
+    }
+
+    private function getHierarchy2($user_id, $level)
+    {
+        $leads = DB::table('registrations')
+            ->select('id', 'user_id', 'blue_user_id', 'gold_user_id', 'saffron_user_id')
+            ->where('blue_user_id', $user_id)
+            ->where('isActive', 1)
+            ->get();
+
+        $hierarchy = [];
+
+        foreach ($leads as $lead) {
+            $subHierarchy = $this->getHierarchy($lead->user_id, $level + 1);
+            $blue_user = User::select('id', 'name')->where("id", $lead->blue_user_id)->first();
+            $gold_agent = Agent::select('id', 'name')->where("id", $lead->gold_user_id)->first();
+            $saffron_agent = Agent::select('id', 'name')->where("id", $lead->saffron_user_id)->first();
+
+            // Check if there are fewer than 3 children and fulfill the requirement
+            while (count($subHierarchy) < 3) {
+                $subHierarchy[] = [
+                    'user_id' => 0,
+                    'level' => 0,
+                    'parent' => [
+                        'blue_user' => ['id' => 0, 'name' => ''],
+                        'gold_agent' => ['id' => 0, 'name' => ''],
+                        'saffron_agent' => ['id' => 0, 'name' => '']
+                    ],
+                    'children' => []
+                ];
+            }
+
+            // Add blue_user_id in every child if its id is 0
+            foreach ($subHierarchy as &$child) {
+                if ($child['parent']['blue_user']['id'] == 0) {
+                    $child['parent']['blue_user']['id'] = $lead->blue_user_id;
+                }
+            }
+
+            $hierarchy[] = [
+                'user_id' => $lead->user_id,
+                'level' => $level,
+                'parent' => [
+                    'blue_user' => $blue_user,
+                    'gold_agent' => $gold_agent,
+                    'saffron_agent' => $saffron_agent
+                ],
+                'children' => $subHierarchy
+            ];
+        }
+
+        return $hierarchy;
+    }
+
+    private function getHierarchy($user_id, $level, $parentBlueUserId = 0)
+    {
+        $leads = DB::table('registrations')
+            ->select('id', 'user_id', 'blue_user_id', 'gold_user_id', 'saffron_user_id')
+            ->where('blue_user_id', $user_id)
+            ->where('isActive', 1)
+            ->get();
+
+        $hierarchy = [];
+
+        foreach ($leads as $lead) {
+            $subHierarchy = $this->getHierarchy($lead->user_id, $level + 1, $lead->blue_user_id);
+            $blue_user = User::select('id', 'name')->where("id", $lead->blue_user_id)->first();
+            $gold_agent = Agent::select('id', 'name')->where("id", $lead->gold_user_id)->first();
+            $saffron_agent = Agent::select('id', 'name')->where("id", $lead->saffron_user_id)->first();
+
+            // Check if there are fewer than 3 children and fulfill the requirement
+            while (count($subHierarchy) < 3) {
+                $subHierarchy[] = [
+                    'user_id' => 0,
+                    'level' => 0,
+                    'parent' => [
+                        'blue_user' => ['id' => $lead->blue_user_id, 'name' => ''],
+                        'gold_agent' => ['id' => 0, 'name' => ''],
+                        'saffron_agent' => ['id' => 0, 'name' => '']
+                    ],
+                    'children' => []
+                ];
+            }
+
+            $hierarchy[] = [
+                'user_id' => $lead->user_id,
+                'level' => $level,
+                'parent' => [
+                    'blue_user' => $blue_user,
+                    'gold_agent' => $gold_agent,
+                    'saffron_agent' => $saffron_agent
+                ],
                 'children' => $subHierarchy
             ];
         }
