@@ -97,7 +97,7 @@
 
 
         var settings = {
-            "url": "/api/v1/get-my-hierarchy?user_id=1",
+            "url": "/api/v1/get-my-hierarchy?user_id=3",
             "method": "GET",
             "timeout": 0,
         };
@@ -120,7 +120,7 @@
                 },
                 width = 1500 - margin.left - margin.right,
                 // height = 700 - margin.top - margin.bottom;
-                height = 700;
+                height = 400;
 
             // declares a tree layout and assigns the size
             const treemap = d3.tree().size([width, height]);
@@ -158,19 +158,30 @@
                 .data(treeData.descendants())
                 .enter().append("g")
                 .attr("class", d => "node" + (d.children ? " node--internal" : " node--leaf"))
-                .attr("transform", d => "translate(" + d.x + "," + d.y + ")");
+                .attr("transform", d => "translate(" + d.x + "," + d.y + ")")
+                .on("click", function(d) {
+                    if (d.data.user_id === 0) {
+                        console.log("Parent user_id:", d.parent.data.user_id);
+                        invite(d.parent.data.user_id);
+                    }
+                });
 
             // adds the circle to the node
             node.append("circle")
                 .attr("r", 10)
                 .style("stroke", "steelblue")
-                .style("fill", "#fff");
+                .style("fill", "#fff")
+                .attr("cursor", "pointer"); // Add cursor:pointer to indicate clickable
 
             // adds the text to the node
             node.append("text")
                 .attr("dy", ".35em")
-                .text(d => d.data.user_id);
+                .text(d => (d.data.user_id === 0) ? "+" : d.data.user_id)
 
+        }
+
+        function invite(parent_id) {
+            alert(parent_id);
         }
     </script>
 
