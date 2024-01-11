@@ -135,7 +135,7 @@ class AdminController extends Controller
                 ]);
             }
 
-            $saffron_agent = Agent::where("category","saffron")->where("isConsented", 0)->get();
+            $saffron_agent = Agent::where("category", "saffron")->where("isConsented", 0)->get();
             if (count($saffron_agent) == 0) {
                 return response()->json([
                     "status" => "failure",
@@ -146,7 +146,7 @@ class AdminController extends Controller
 
             $saffron_agent_id = $saffron_agent[0]->id;
 
-            $gold_agent = Agent::where("category","gold")->where("isConsented", 0)->get();
+            $gold_agent = Agent::where("category", "gold")->where("isConsented", 0)->get();
             if (count($gold_agent) == 0) {
                 return response()->json([
                     "status" => "failure",
@@ -232,15 +232,62 @@ class AdminController extends Controller
     {
         try {
 
+            $saffron_agent = Agent::where("category", "saffron")->where("isConsented", 0)->get();
+            if (count($saffron_agent) == 0) {
+                return response()->json([
+                    "status" => "failure",
+                    "status_code" => 400,
+                    "message" => "Saffron agent not found"
+                ]);
+            }
+
+            $saffron_agent_id = $saffron_agent[0]->id;
+
+            $gold_agent = Agent::where("category", "gold")->where("isConsented", 0)->get();
+            if (count($gold_agent) == 0) {
+                return response()->json([
+                    "status" => "failure",
+                    "status_code" => 400,
+                    "message" => "Gold agent not found"
+                ]);
+            }
+
+            $gold_agent_id = $gold_agent[0]->id;
+
+            $blue_code = $this->generateRandomCode();
+            $saffron_code = $this->generateRandomCode();
+            $gold_code = $this->generateRandomCode();
+
+            $link_generated = false;
+            while (!$link_generated) {
+                $link = $this->generateLink($blue_code, $saffron_code, $gold_code);
+                $registration = Registration::where("link", $link)->first();
+                if (!$registration && $link !== "") {
+                    $link_generated = true;
+                }
+            }
+
+
             $blue_user = new User();
             $blue_user->name = "Master Blue User";
             $blue_user->profile_image = "default_image.png";
             $blue_user->save();
 
+            $registration = new Registration();
+            $registration->link = $link;
+            $registration->blue_user_id = $blue_user->id;
+            $registration->blue_code = $blue_code;
+            $registration->saffron_user_id = $saffron_agent_id;
+            $registration->saffron_code = $saffron_code;
+            $registration->gold_user_id = $gold_agent_id;
+            $registration->gold_code = $gold_code;
+            $registration->save();
+
             return response()->json([
                 "status" => "success",
                 "status_code" => 200,
                 "data" => $blue_user,
+                "link" => $link,
                 "message" => "Master Blue User created successfully"
             ]);
         } catch (Exception $e) {
