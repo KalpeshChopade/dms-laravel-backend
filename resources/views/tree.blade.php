@@ -12,9 +12,7 @@
         }
 
         .node circle {
-            fill: #fff;
-            stroke: steelblue;
-            stroke-width: 3px;
+            stroke-width: 1px;
         }
 
         .node text {
@@ -26,6 +24,10 @@
             fill: none;
             stroke: #ccc;
             stroke-width: 2px;
+        }
+
+        .node--green circle {
+            fill: #8BC34A;
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
@@ -170,7 +172,7 @@
             node.append("circle")
                 .attr("r", 10)
                 .style("stroke", "steelblue")
-                .style("fill", "#fff")
+                .style("fill", d => getFillColor(d))
                 .attr("cursor", "pointer"); // Add cursor:pointer to indicate clickable
 
             // adds the text to the node
@@ -182,6 +184,20 @@
 
         function invite(parent_id) {
             alert(parent_id);
+        }
+
+        function hasThreeChildren(node) {
+            return node.children && node.children.length === 3 && node.children.every(child => child.data.user_id !== 0);
+        }
+
+        function getFillColor(node) {
+            if (hasThreeChildren(node)) {
+                return "#8BC34A"; // Green
+            } else if (node.data.user_id !== 0) {
+                return "#2196F3"; // Blue
+            } else {
+                return "#fff"; // White
+            }
         }
     </script>
 
