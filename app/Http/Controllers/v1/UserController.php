@@ -47,7 +47,7 @@ class UserController extends Controller
                 return response()->json([
                     "status" => "failure",
                     "status_code" => 400,
-                    "message" => "Link is required"
+                    "message" => "Invitation Link is required to login"
                 ]);
             }
 
@@ -57,7 +57,7 @@ class UserController extends Controller
                 return response()->json([
                     "status" => "failure",
                     "status_code" => 400,
-                    "message" => "Link does not exists"
+                    "message" => "Invitation Expired"
                 ]);
             }
 
@@ -67,7 +67,7 @@ class UserController extends Controller
                 return response()->json([
                     "status" => "failure",
                     "status_code" => 400,
-                    "message" => "Blue User already has 3 leads"
+                    "message" => "Invitation Expired"
                 ]);
             }
 
@@ -90,6 +90,7 @@ class UserController extends Controller
 
 
             $user = new User();
+            $user->bkb_id = $request->input("bkb_id");
             $user->name = $request->input("name");
             $user->profile_image = $profile_image;
             $user->save();
