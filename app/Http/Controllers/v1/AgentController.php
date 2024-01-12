@@ -64,11 +64,13 @@ class AgentController extends Controller
             ]);
 
             if ($validator->fails()) {
+                $agents = Agent::where("isConsented", 0)->get();
+
                 return response()->json([
-                    "status" => "failure",
-                    "status_code" => 400,
-                    "data" => $validator->errors(),
-                    "message" => "Bad Request"
+                    "status" => "success",
+                    "status_code" => 200,
+                    "data" => $agents,
+                    "message" => "Agents fetched successfully"
                 ]);
             }
 
