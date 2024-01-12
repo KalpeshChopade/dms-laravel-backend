@@ -40,64 +40,6 @@
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.25.0/babel.min.js"></script>
     <script>
-        const treeDataOriginal = {
-            "name": "Eve",
-            "value": 15,
-            "type": "black",
-            "level": "yellow",
-            "children": [{
-                    "name": "Cain",
-                    "value": 10,
-                    "type": "grey",
-                    "level": "red"
-                },
-                {
-                    "name": "Seth",
-                    "value": 10,
-                    "type": "grey",
-                    "level": "red",
-                    "children": [{
-                            "name": "Enos",
-                            "value": 7.5,
-                            "type": "grey",
-                            "level": "purple"
-                        },
-                        {
-                            "name": "Noam",
-                            "value": 7.5,
-                            "type": "grey",
-                            "level": "purple"
-                        }
-                    ]
-                },
-                {
-                    "name": "Abel",
-                    "value": 10,
-                    "type": "grey",
-                    "level": "blue"
-                },
-                {
-                    "name": "Awan",
-                    "value": 10,
-                    "type": "grey",
-                    "level": "green",
-                    "children": [{
-                        "name": "Enoch",
-                        "value": 7.5,
-                        "type": "grey",
-                        "level": "orange"
-                    }]
-                },
-                {
-                    "name": "Azura",
-                    "value": 10,
-                    "type": "grey",
-                    "level": "green"
-                }
-            ]
-        };
-
-
         var settings = {
             "url": "/api/v1/get-my-hierarchy?user_id=3",
             "method": "GET",
@@ -144,15 +86,15 @@
 
             // adds the links between the nodes
             const link = g.selectAll(".link")
-                .data(treeData.descendants().slice(1))
+                .data(treeData.links())
                 .enter().append("path")
                 .attr("class", "link")
                 .style("stroke", "#ccc")
                 .attr("d", d => {
-                    return "M" + d.x + "," + d.y +
-                        "C" + (d.x + d.parent.x) / 2 + "," + d.y +
-                        " " + (d.x + d.parent.x) / 2 + "," + d.parent.y +
-                        " " + d.parent.x + "," + d.parent.y;
+                    return "M" + d.source.x + "," + d.source.y +
+                        "C" + (d.source.x + d.target.x) / 2 + "," + d.source.y +
+                        " " + (d.source.x + d.target.x) / 2 + "," + d.target.y +
+                        " " + d.target.x + "," + d.target.y;
                 });
 
             // adds each node as a group
