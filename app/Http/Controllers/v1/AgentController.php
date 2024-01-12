@@ -57,12 +57,10 @@ class AgentController extends Controller
     /** Function to fetchAgents */
     public function fetchAgents(Request $request)
     {
-        try {
-
+        // try {
             $validator = Validator::make($request->all(), [
                 "category" => "required",
             ]);
-
             if ($validator->fails()) {
                 $agents = Agent::where("isConsented", 0)->get();
 
@@ -82,12 +80,12 @@ class AgentController extends Controller
                 "data" => $agents,
                 "message" => "Agents fetched successfully"
             ]);
-        } catch (Exception $e) {
-            return response()->json([
-                "status" => "error",
-                "status_code" => 500,
-                "message" => $e->getMessage()
-            ]);
-        }
+        // } catch (Exception $e) {
+        //     return response()->json([
+        //         "status" => "error",
+        //         "status_code" => 500,
+        //         "message" => $e->getMessage()
+        //     ]);
+        // }
     }
 }
