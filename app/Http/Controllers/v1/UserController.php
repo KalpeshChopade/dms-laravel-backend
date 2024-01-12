@@ -614,6 +614,41 @@ class UserController extends Controller
 
         $hierarchy = [];
 
+        if (count($leads) == 0) {
+            $subHierarchy[] = [
+                'user_id' => 0,
+                'level' => $level + 1,
+                'parent' => [
+                    'blue_user' => ['id' => $user_id, 'name' => ''],
+                    'gold_agent' => ['id' => 0, 'name' => ''],
+                    'saffron_agent' => ['id' => 0, 'name' => '']
+                ],
+                'children' => []
+            ];
+            $subHierarchy[] = [
+                'user_id' => 0,
+                'level' => $level + 1,
+                'parent' => [
+                    'blue_user' => ['id' => $user_id, 'name' => ''],
+                    'gold_agent' => ['id' => 0, 'name' => ''],
+                    'saffron_agent' => ['id' => 0, 'name' => '']
+                ],
+                'children' => []
+            ];
+            $subHierarchy[] = [
+                'user_id' => 0,
+                'level' => $level + 1,
+                'parent' => [
+                    'blue_user' => ['id' => $user_id, 'name' => ''],
+                    'gold_agent' => ['id' => 0, 'name' => ''],
+                    'saffron_agent' => ['id' => 0, 'name' => '']
+                ],
+                'children' => []
+            ];
+
+            return $subHierarchy;
+        }
+
         foreach ($leads as $lead) {
             $subHierarchy = $this->getHierarchy($lead->user_id, $level + 1, $lead->blue_user_id);
             $blue_user = User::select('id', 'name')->where("id", $lead->blue_user_id)->first();
@@ -624,7 +659,7 @@ class UserController extends Controller
             while (count($subHierarchy) < 3) {
                 $subHierarchy[] = [
                     'user_id' => 0,
-                    'level' => 0,
+                    'level' => $level,
                     'parent' => [
                         'blue_user' => ['id' => $lead->blue_user_id, 'name' => ''],
                         'gold_agent' => ['id' => 0, 'name' => ''],
@@ -636,7 +671,7 @@ class UserController extends Controller
 
             $hierarchy[] = [
                 'user_id' => $lead->user_id,
-                'level' => $level,
+                'level' => $level + 1,
                 'parent' => [
                     'blue_user' => $blue_user,
                     'gold_agent' => $gold_agent,
