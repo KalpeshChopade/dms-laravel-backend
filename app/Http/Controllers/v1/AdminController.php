@@ -81,7 +81,7 @@ class AdminController extends Controller
                     "status" => "failure",
                     "status_code" => 400,
                     "message" => "Admin not found"
-                ]);
+                ], 400);
             }
 
             if (!Hash::check($request->input("password"), $admin->password)) {
@@ -103,7 +103,7 @@ class AdminController extends Controller
                 "status" => "error",
                 "status_code" => 500,
                 "message" => $e->getMessage()
-            ]);
+            ], 500);
         }
     }
 
