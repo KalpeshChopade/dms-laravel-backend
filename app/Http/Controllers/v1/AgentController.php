@@ -7,6 +7,7 @@ use App\Models\Agent;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Income1;
 
 class AgentController extends Controller
 {
@@ -87,5 +88,51 @@ class AgentController extends Controller
         //         "message" => $e->getMessage()
         //     ]);
         // }
+    }
+
+    // filter agents base on there category
+    public function filterAgentIncome(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                "days" => "required",
+            ]);
+            if ($validator->fails()) {
+
+                $agent = Agent::where("isConsented", 0)->get();
+
+                // Filter agents base on date
+                if ($request->input("date")) {
+                    $agent = $agent->where("days", $request->input("date"));
+                }
+
+                return response()->json([
+                    "status" => "success",
+                    "status_code" => 200,
+                    "data" => $agent,
+                    "message" => "Agents fetched successfully"
+                ]);
+            }
+
+            $agents = Income1::where("isDeleted", 0)->get();
+
+            // filter agents base on date
+            if ($request->input("date")) {
+                $agents = $agents->where("date", $request->input("date"));
+            }
+
+            return response()->json([
+                "status" => "success",
+                "status_code" => 200,
+                "data" => $agents,
+                "message" => "Agents fetched successfully"
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                "status" => "error",
+                "status_code" => 500,
+                "message" => $e->getMessage()
+            ]);
+        }
     }
 }

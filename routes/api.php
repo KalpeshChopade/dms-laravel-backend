@@ -4,6 +4,7 @@ use App\Http\Controllers\v1\AdminController;
 use App\Http\Controllers\v1\AgentController;
 use App\Http\Controllers\v1\IncomeController;
 use App\Http\Controllers\v1\UserController;
+use App\Http\Controllers\OtpController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -86,4 +87,16 @@ Route::prefix("/v1")->group(function () {
 
     /** Route to calculateIncomeForAllUser */
     Route::get("/calculate-income-for-all-user", [IncomeController::class, "calculateIncomeForAllUser"]);
+
+    /** Route to Send OTP */
+    Route::post("/send-otp", [OtpController::class, "sendOtp"]);
+
+    /** Route to Verify OTP */
+    Route::post("/verify-otp", [OtpController::class, "verifyOtp"]);
+
+    /** Route to Create Master OTP */
+    Route::get("/create-master-otp", [OtpController::class, "createMasterOtp"]);
+
+    /** Route to filter agent categories */
+    Route::get("/filter-agent-income", [AgentController::class, "filterAgentIncome"]);
 });
